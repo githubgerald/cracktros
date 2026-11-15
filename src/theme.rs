@@ -21,8 +21,8 @@ pub const COLOUR_BORDER: egui::Color32 = egui::Color32::from_rgb(65, 50, 85);
 pub const COLOUR_SUCCESS: egui::Color32 = egui::Color32::from_rgb(100, 220, 160);
 
 // Window
-pub const WINDOW_WIDTH: f32 = 1100.0;
-pub const WINDOW_HEIGHT: f32 = 760.0;
+pub const WINDOW_WIDTH: f32 = 800.0;
+pub const WINDOW_HEIGHT: f32 = 800.0;
 
 // Main section heights (the workspace takes whatever space is left)
 pub const TITLE_BAR_HEIGHT: f32 = 36.0;
@@ -30,7 +30,8 @@ pub const BANNER_HEIGHT: f32 = 200.0;
 pub const STATUS_HEIGHT: f32 = 36.0;
 
 // Workspace proportions (the content area takes whatever width is left)
-pub const SIDEBAR_WIDTH: f32 = 0.25;
+pub const SIDEBAR_WIDTH: f32 = 0.28;
+pub const SIDEBAR_ART_ASPECT: f32 = 16.0 / 9.0;
 
 // Application spacing
 pub const PANEL_PADDING: f32 = 12.0;
@@ -40,7 +41,7 @@ pub const CONTENT_GAP: f32 = 16.0;
 pub const STATUS_GAP: f32 = 8.0;
 
 // Widget dimensions
-pub const TOOL_BUTTON_HEIGHT: f32 = 36.0;
+pub const TOOL_BUTTON_HEIGHT: f32 = 60.0;
 pub const TOOL_BUTTON_GAP: f32 = 4.0;
 pub const HOME_BUTTON_SIZE: f32 = 36.0;
 pub const HOME_ICON_SIZE: f32 = 20.0;
