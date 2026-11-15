@@ -8,9 +8,10 @@ fn main() -> eframe::Result {
     // Uses config.rs properties for the window
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([config::WINDOW_WIDTH, config::WINDOW_HEIGHT])
-            .with_min_inner_size([config::WINDOW_WIDTH, config::WINDOW_HEIGHT])
-            .with_max_inner_size([config::WINDOW_WIDTH, config::WINDOW_HEIGHT])
+            .with_inner_size([theme::WINDOW_WIDTH, theme::WINDOW_HEIGHT])
+            .with_min_inner_size([theme::WINDOW_WIDTH, theme::WINDOW_HEIGHT])
+            .with_max_inner_size([theme::WINDOW_WIDTH, theme::WINDOW_HEIGHT])
+            .with_decorations(false)
             .with_resizable(false),
         ..Default::default()
     };
