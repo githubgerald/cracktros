@@ -155,7 +155,7 @@ impl eframe::App for Cracktros {
         egui::Panel::top("header").show(ui, |ui| {
             ui.horizontal(|ui| {
                 // Home button
-                let home_button = egui::Button::new("but ton")
+                let home_button = egui::Button::new("home")
                     .min_size(egui::vec2(65.0, 34.0))
                     .corner_radius(egui::CornerRadius::same(4));
 
