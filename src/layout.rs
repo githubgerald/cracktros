@@ -1,4 +1,4 @@
-use crate::app::{AppStatus, Cracktros, SourceFormat};
+use crate::app::{Cracktros, SourceFormat};
 use crate::config;
 use crate::theme;
 use eframe::egui;
@@ -57,8 +57,10 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
 
                             ui.horizontal(|ui| {
                                 // 48x48 sized home button
-                                let home_button =
-                                    ui.add_sized([48.0, 48.0], egui::Button::new("✦"));
+                                let home_button = ui.add_sized(
+                                    [theme::HOME_BUTTON_SIZE, theme::HOME_BUTTON_SIZE],
+                                    egui::Button::new("✦"),
+                                );
 
                                 // de-selects options and goes back to the intro screen
                                 if home_button.clicked() {
@@ -66,7 +68,7 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                     app.selected_output = None;
                                 }
 
-                                ui.add_space(12.0);
+                                ui.add_space(theme::TITLE_GAP);
 
                                 ui.vertical(|ui| {
                                     ui.label(
@@ -127,9 +129,9 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                             .size(theme::HEADING_SIZE)
                                             .strong(),
                                     );
-                                    ui.add_space(8.0);
+                                    ui.add_space(theme::HEADING_GAP);
                                     ui.separator();
-                                    ui.add_space(8.0);
+                                    ui.add_space(theme::HEADING_GAP);
 
                                     // Tool selection
                                     ui.spacing_mut().item_spacing.y = theme::TOOL_BUTTON_GAP;
@@ -183,9 +185,9 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                             .size(theme::HEADING_SIZE)
                                             .strong(),
                                     );
-                                    ui.add_space(8.0);
+                                    ui.add_space(theme::HEADING_GAP);
                                     ui.separator();
-                                    ui.add_space(16.0);
+                                    ui.add_space(theme::CONTENT_GAP);
 
                                     // Display selected tool
                                     match app.selected_source {
@@ -194,7 +196,7 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
 
                                             ui.label(format!("バージョン {}", config::APP_VERSION));
 
-                                            ui.add_space(12.0);
+                                            ui.add_space(theme::TITLE_GAP);
                                             ui.label(
                                                 egui::RichText::new(config::HOME_BODY)
                                                     .size(theme::BODY_SIZE),
@@ -202,19 +204,18 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                         }
 
                                         Some(SourceFormat::Compressor) => {
-                                            ui.heading(config::COMPRESSOR_TITLE);
                                             ui.label(
                                                 egui::RichText::new(config::COMPRESSOR_SUBTITLE)
                                                     .size(theme::BODY_SIZE)
                                                     .color(theme::COLOUR_TEXT_MUTED),
                                             );
-                                            ui.add_space(12.0);
+                                            ui.add_space(theme::TITLE_GAP);
                                             ui.label(config::COMPRESSOR_BODY);
                                         }
 
                                         Some(source) => {
                                             ui.label("IMAGE CONVERSION");
-                                            ui.add_space(12.0);
+                                            ui.add_space(theme::TITLE_GAP);
 
                                             ui.horizontal(|ui| {
                                                 ui.heading(source.label());
@@ -237,7 +238,7 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                                     });
                                             });
 
-                                            ui.add_space(16.0);
+                                            ui.add_space(theme::CONTENT_GAP);
 
                                             if let Some(output) = app.selected_output {
                                                 ui.label(format!(
@@ -276,7 +277,7 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                             ui.horizontal(|ui| {
                                 ui.label(config::SECTION_STATUS);
 
-                                ui.add_space(8.0);
+                                ui.add_space(theme::STATUS_GAP);
 
                                 ui.colored_label(theme::COLOUR_SUCCESS, "●");
 
