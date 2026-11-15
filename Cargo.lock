@@ -681,8 +681,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "crackro-conversion"
-version = "0.1.0"
+name = "cracktro"
+version = "0.4.0"
 dependencies = [
  "eframe",
 ]
