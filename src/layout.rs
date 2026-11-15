@@ -1,14 +1,15 @@
-use crate::app::{Cracktros, SourceFormat};
+use crate::app::{AppStatus, Cracktros, SourceFormat};
 use crate::config;
+use crate::theme;
 use eframe::egui;
 
 // Consistent button component
 fn tool_button(ui: &mut egui::Ui, label: &str, selected: bool) -> egui::Response {
     let button = egui::Button::new(label)
         .selected(selected)
-        .corner_radius(egui::CornerRadius::same(config::TOOL_BUTTON_RADIUS));
+        .corner_radius(egui::CornerRadius::same(theme::BUTTON_RADIUS));
 
-    ui.add_sized([ui.available_width(), config::TOOL_BUTTON_HEIGHT], button)
+    ui.add_sized([ui.available_width(), theme::TOOL_BUTTON_HEIGHT], button)
 }
 
 // Draws the application interface
@@ -16,8 +17,8 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
     let available = ui.available_size();
 
     // Main interface spacing
-    let padding = config::APP_PADDING;
-    let gap = config::SECTION_GAP;
+    let padding = theme::APP_PADDING;
+    let gap = theme::SECTION_GAP;
 
     let inner_width = available.x - padding * 2.0;
     let inner_height = available.y - padding * 2.0 - gap * 2.0;
@@ -29,7 +30,7 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
 
     // Main application background and padding
     egui::Frame::new()
-        .fill(config::COLOUR_BACKGROUND)
+        .fill(theme::COLOUR_BACKGROUND)
         .inner_margin(egui::Margin::same(padding as i8))
         .show(ui, |ui| {
             let inner_size = ui.available_size();
@@ -43,13 +44,13 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                 egui::Layout::top_down(egui::Align::Min),
                 |ui| {
                     egui::Frame::new()
-                        .fill(config::COLOUR_PANEL)
+                        .fill(theme::COLOUR_PANEL)
                         .stroke(egui::Stroke::new(
-                            config::BORDER_THICKNESS,
-                            config::COLOUR_BORDER,
+                            theme::BORDER_THICKNESS,
+                            theme::COLOUR_BORDER,
                         ))
-                        .corner_radius(egui::CornerRadius::same(config::PANEL_RADIUS))
-                        .inner_margin(egui::Margin::same(config::PANEL_PADDING as i8))
+                        .corner_radius(egui::CornerRadius::same(theme::PANEL_RADIUS))
+                        .inner_margin(egui::Margin::same(theme::PANEL_PADDING as i8))
                         .show(ui, |ui| {
                             let size = ui.available_size();
                             ui.set_min_size(size);
@@ -68,8 +69,17 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                 ui.add_space(12.0);
 
                                 ui.vertical(|ui| {
-                                    ui.heading(config::APP_TITLE);
-                                    ui.label(config::APP_SUBTITLE);
+                                    ui.label(
+                                        egui::RichText::new(config::APP_TITLE)
+                                            .size(theme::HEADING_SIZE)
+                                            .strong(),
+                                    );
+
+                                    ui.label(
+                                        egui::RichText::new(config::APP_SUBTITLE)
+                                            .size(theme::SMALL_SIZE)
+                                            .color(theme::COLOUR_TEXT_MUTED),
+                                    );
                                 });
 
                                 ui.with_layout(
@@ -90,8 +100,9 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                 egui::vec2(inner_width, workspace_height),
                 egui::Layout::left_to_right(egui::Align::Min),
                 |ui| {
-                    let sidebar_width = (inner_width - gap) * config::SIDEBAR_WIDTH;
-                    let content_width = inner_width - sidebar_width - gap;
+                    let available_workspace_width = inner_width - gap;
+                    let sidebar_width = available_workspace_width * config::SIDEBAR_WIDTH;
+                    let content_width = available_workspace_width * config::CONTENT_WIDTH;
 
                     // Left sidebar
                     ui.allocate_ui_with_layout(
@@ -99,24 +110,30 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                         egui::Layout::top_down(egui::Align::Min),
                         |ui| {
                             egui::Frame::new()
-                                .fill(config::COLOUR_PANEL_LIGHT)
+                                .fill(theme::COLOUR_PANEL_LIGHT)
                                 .stroke(egui::Stroke::new(
-                                    config::BORDER_THICKNESS,
-                                    config::COLOUR_BORDER,
+                                    theme::BORDER_THICKNESS,
+                                    theme::COLOUR_BORDER,
                                 ))
-                                .corner_radius(egui::CornerRadius::same(config::PANEL_RADIUS))
-                                .inner_margin(egui::Margin::same(config::PANEL_PADDING as i8))
+                                .corner_radius(egui::CornerRadius::same(theme::PANEL_RADIUS))
+                                .inner_margin(egui::Margin::same(theme::PANEL_PADDING as i8))
                                 .show(ui, |ui| {
                                     let size = ui.available_size();
                                     ui.set_min_size(size);
 
                                     // Sidebar title
-                                    ui.heading(config::SECTION_TOOLS);
+                                    ui.label(
+                                        egui::RichText::new(config::SECTION_TOOLS)
+                                            .size(theme::HEADING_SIZE)
+                                            .strong(),
+                                    );
                                     ui.add_space(8.0);
                                     ui.separator();
                                     ui.add_space(8.0);
 
                                     // Tool selection
+                                    ui.spacing_mut().item_spacing.y = theme::TOOL_BUTTON_GAP;
+
                                     for tool in [
                                         SourceFormat::Png,
                                         SourceFormat::Jpg,
@@ -143,13 +160,13 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                         egui::Layout::top_down(egui::Align::Min),
                         |ui| {
                             egui::Frame::new()
-                                .fill(config::COLOUR_BACKGROUND)
+                                .fill(theme::COLOUR_BACKGROUND)
                                 .stroke(egui::Stroke::new(
-                                    config::BORDER_THICKNESS,
-                                    config::COLOUR_BORDER,
+                                    theme::BORDER_THICKNESS,
+                                    theme::COLOUR_BORDER,
                                 ))
-                                .corner_radius(egui::CornerRadius::same(config::PANEL_RADIUS))
-                                .inner_margin(egui::Margin::same(config::PANEL_PADDING as i8))
+                                .corner_radius(egui::CornerRadius::same(theme::PANEL_RADIUS))
+                                .inner_margin(egui::Margin::same(theme::PANEL_PADDING as i8))
                                 .show(ui, |ui| {
                                     let size = ui.available_size();
                                     ui.set_min_size(size);
@@ -161,7 +178,11 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                         Some(source) => source.label(),
                                     };
 
-                                    ui.heading(section_title);
+                                    ui.label(
+                                        egui::RichText::new(section_title)
+                                            .size(theme::HEADING_SIZE)
+                                            .strong(),
+                                    );
                                     ui.add_space(8.0);
                                     ui.separator();
                                     ui.add_space(16.0);
@@ -174,12 +195,19 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                                             ui.label(format!("バージョン {}", config::APP_VERSION));
 
                                             ui.add_space(12.0);
-                                            ui.label(config::HOME_BODY);
+                                            ui.label(
+                                                egui::RichText::new(config::HOME_BODY)
+                                                    .size(theme::BODY_SIZE),
+                                            );
                                         }
 
                                         Some(SourceFormat::Compressor) => {
                                             ui.heading(config::COMPRESSOR_TITLE);
-                                            ui.label(config::COMPRESSOR_SUBTITLE);
+                                            ui.label(
+                                                egui::RichText::new(config::COMPRESSOR_SUBTITLE)
+                                                    .size(theme::BODY_SIZE)
+                                                    .color(theme::COLOUR_TEXT_MUTED),
+                                            );
                                             ui.add_space(12.0);
                                             ui.label(config::COMPRESSOR_BODY);
                                         }
@@ -234,27 +262,31 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
                 egui::Layout::left_to_right(egui::Align::Center),
                 |ui| {
                     egui::Frame::new()
-                        .fill(config::COLOUR_PANEL)
+                        .fill(theme::COLOUR_PANEL)
                         .stroke(egui::Stroke::new(
-                            config::BORDER_THICKNESS,
-                            config::COLOUR_BORDER,
+                            theme::BORDER_THICKNESS,
+                            theme::COLOUR_BORDER,
                         ))
-                        .corner_radius(egui::CornerRadius::same(config::PANEL_RADIUS))
-                        .inner_margin(egui::Margin::same(config::SECTION_GAP as i8))
+                        .corner_radius(egui::CornerRadius::same(theme::PANEL_RADIUS))
+                        .inner_margin(egui::Margin::same(theme::SECTION_GAP as i8))
                         .show(ui, |ui| {
                             let size = ui.available_size();
                             ui.set_min_size(size);
 
                             ui.horizontal(|ui| {
-                                ui.colored_label(config::COLOUR_SUCCESS, "●");
+                                ui.label(config::SECTION_STATUS);
 
-                                ui.label(config::STATUS_READY);
+                                ui.add_space(8.0);
+
+                                ui.colored_label(theme::COLOUR_SUCCESS, "●");
+
+                                ui.label(app.status.label());
 
                                 ui.with_layout(
                                     egui::Layout::right_to_left(egui::Align::Center),
                                     |ui| {
                                         ui.label(
-                                            egui::RichText::new("///").color(config::COLOUR_ACCENT),
+                                            egui::RichText::new("///").color(theme::COLOUR_ACCENT),
                                         );
                                     },
                                 );

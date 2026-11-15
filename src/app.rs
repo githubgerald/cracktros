@@ -1,5 +1,6 @@
-use eframe::egui;
+use crate::config;
 use crate::{layout, theme};
+use eframe::egui;
 
 // Defines the input categories that can be selected in the sidebar
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
@@ -22,19 +23,40 @@ pub enum OutputFormat {
     Webp,
 }
 
+// Application processing status
+#[derive(Clone, Copy, Default)]
+pub enum AppStatus {
+    #[default]
+    Ready,
+    Loading,
+    Converting,
+    Complete,
+}
+
+impl AppStatus {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Ready => config::STATUS_READY,
+            Self::Loading => config::STATUS_LOADING,
+            Self::Converting => config::STATUS_CONVERTING,
+            Self::Complete => config::STATUS_COMPLETE,
+        }
+    }
+}
+
 // Stores currently selected sidebar category and output
 #[derive(Default)]
 pub struct Cracktros {
+    pub status: AppStatus,
     pub selected_source: Option<SourceFormat>,
     pub selected_output: Option<OutputFormat>,
     theme_configured: bool, // this checks if the theme has already been applied so it doesnt constantly redraw
-}// Checks the value of an input and runs the corresponding option.
+} // Checks the value of an input and runs the corresponding option.
 
 // Names and conversions for each category
 impl SourceFormat {
     pub fn label(self) -> &'static str {
         match self {
-            
             Self::Png => "PNG",
             Self::Jpg => "JPG",
             Self::Ico => "ICO",
@@ -82,12 +104,11 @@ impl OutputFormat {
 impl eframe::App for Cracktros {
     // Draws the interface and applies theme
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-
         // Applies the theme once
         if !self.theme_configured {
             theme::configure_theme(ui.ctx());
             self.theme_configured = true;
-        }   
+        }
 
         layout::draw_app(self, ui);
     }

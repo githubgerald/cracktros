@@ -1,44 +1,99 @@
+// Store visual styling and appearance settings here.
+// Only include values and functions that control how the interface
+// looks, not application content, settings or functionality.
+
 use eframe::egui;
 
-// Defines the colours and appearance used throughout the interface
+// Colour palette
+pub const COLOUR_BACKGROUND: egui::Color32 = egui::Color32::from_rgb(12, 9, 21);
+
+pub const COLOUR_PANEL: egui::Color32 = egui::Color32::from_rgb(22, 17, 35);
+
+pub const COLOUR_PANEL_LIGHT: egui::Color32 = egui::Color32::from_rgb(32, 25, 49);
+
+// Accent colours
+pub const COLOUR_ACCENT: egui::Color32 = egui::Color32::from_rgb(160, 90, 255);
+
+pub const COLOUR_ACCENT_BLUE: egui::Color32 = egui::Color32::from_rgb(70, 170, 255);
+
+pub const COLOUR_ACCENT_PINK: egui::Color32 = egui::Color32::from_rgb(255, 90, 180);
+
+// Text colours
+pub const COLOUR_TEXT: egui::Color32 = egui::Color32::from_rgb(235, 230, 245);
+
+pub const COLOUR_TEXT_MUTED: egui::Color32 = egui::Color32::from_rgb(145, 135, 165);
+
+// Other colours
+pub const COLOUR_BORDER: egui::Color32 = egui::Color32::from_rgb(65, 50, 85);
+
+pub const COLOUR_SUCCESS: egui::Color32 = egui::Color32::from_rgb(100, 220, 160);
+
+// Application spacing
+pub const APP_PADDING: f32 = 12.0;
+pub const SECTION_GAP: f32 = 8.0;
+pub const PANEL_PADDING: f32 = 12.0;
+
+// Widget dimensions
+pub const TOOL_BUTTON_HEIGHT: f32 = 36.0;
+pub const TOOL_BUTTON_GAP: f32 = 4.0;
+
+// Corner radii
+pub const BUTTON_RADIUS: u8 = 5;
+pub const PANEL_RADIUS: u8 = 6;
+
+// Borders
+pub const BORDER_THICKNESS: f32 = 1.0;
+
+// Typography
+pub const HEADING_SIZE: f32 = 24.0;
+pub const BODY_SIZE: f32 = 14.0;
+pub const SMALL_SIZE: f32 = 12.0;
+
+// Applies the application theme
 pub fn configure_theme(ctx: &egui::Context) {
     let mut visuals = egui::Visuals::dark();
 
     // Background colours
-    visuals.panel_fill = egui::Color32::from_rgb(17, 13, 29);
-    visuals.window_fill = egui::Color32::from_rgb(27, 20, 43);
-    visuals.extreme_bg_color = egui::Color32::from_rgb(12, 9, 21);
-    visuals.faint_bg_color = egui::Color32::from_rgb(37, 27, 57);
+    visuals.panel_fill = COLOUR_PANEL;
+    visuals.window_fill = COLOUR_PANEL;
+    visuals.extreme_bg_color = COLOUR_BACKGROUND;
+    visuals.faint_bg_color = COLOUR_PANEL_LIGHT;
 
-    // Default text colour
-    visuals.override_text_color = Some(egui::Color32::from_rgb(229, 221, 245));
+    // Text
+    visuals.override_text_color = Some(COLOUR_TEXT);
 
-    // Normal buttons
-    visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(39, 29, 59);
+    // Selection
+    visuals.selection.bg_fill = COLOUR_ACCENT;
+    visuals.selection.stroke = egui::Stroke::new(BORDER_THICKNESS, COLOUR_ACCENT_BLUE);
 
-    // Hovered buttons
-    visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(62, 43, 91);
+    // Inactive widgets
+    visuals.widgets.inactive.bg_fill = COLOUR_PANEL_LIGHT;
+    visuals.widgets.inactive.fg_stroke.color = COLOUR_TEXT;
+    visuals.widgets.inactive.bg_stroke = egui::Stroke::new(BORDER_THICKNESS, COLOUR_BORDER);
 
-    // Pressed buttons
-    visuals.widgets.active.bg_fill = egui::Color32::from_rgb(83, 53, 119);
+    // Hovered widgets
+    visuals.widgets.hovered.bg_fill = COLOUR_ACCENT;
+    visuals.widgets.hovered.fg_stroke.color = COLOUR_TEXT;
+    visuals.widgets.hovered.bg_stroke = egui::Stroke::new(BORDER_THICKNESS, COLOUR_ACCENT_BLUE);
 
-    // Selected elements
-    visuals.selection.bg_fill = egui::Color32::from_rgb(103, 65, 157);
+    // Active widgets
+    visuals.widgets.active.bg_fill = COLOUR_ACCENT;
+    visuals.widgets.active.fg_stroke.color = COLOUR_TEXT;
+    visuals.widgets.active.bg_stroke = egui::Stroke::new(BORDER_THICKNESS, COLOUR_ACCENT_PINK);
 
-    // Button borders
-    visuals.widgets.inactive.bg_stroke =
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(65, 48, 91));
+    // Non-interactive widgets
+    visuals.widgets.noninteractive.bg_fill = COLOUR_PANEL;
+    visuals.widgets.noninteractive.fg_stroke.color = COLOUR_TEXT;
+    visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(BORDER_THICKNESS, COLOUR_BORDER);
 
-    visuals.widgets.hovered.bg_stroke =
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(139, 97, 191));
+    // Widget corners
+    visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(BUTTON_RADIUS);
 
-    visuals.widgets.active.bg_stroke =
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(176, 117, 221));
+    visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(BUTTON_RADIUS);
 
-    // Button corners
-    visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(5);
-    visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(5);
-    visuals.widgets.active.corner_radius = egui::CornerRadius::same(5);
+    visuals.widgets.active.corner_radius = egui::CornerRadius::same(BUTTON_RADIUS);
+
+    visuals.widgets.noninteractive.corner_radius = egui::CornerRadius::same(BUTTON_RADIUS);
 
     ctx.set_visuals(visuals);
 }
