@@ -2,15 +2,12 @@ use eframe::egui;
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions::default(); // Uses default windows setting from eframe
     eframe::run_native(
-
         // Window titles
-        "Cracktros の コンバージョン",   
-
-        // Window Settings                   
-        options,          
-
-        // Creates the app                                  
-        Box::new(|_cc| Ok(Box::new(Cracktros::default()))), 
+        "Cracktros の コンバージョン",
+        // Window Settings
+        options,
+        // Creates the app
+        Box::new(|_cc| Ok(Box::new(Cracktros::default()))),
     )
 }
 
@@ -88,18 +85,81 @@ impl OutputFormat {
 struct Cracktros {
     selected_source: Option<SourceFormat>,
     selected_output: Option<OutputFormat>,
+    theme_configured: bool, // this checks if the theme has already been applied so it doesnt constantly redraw
+}
+
+// Defines the colours and appearance used throughout the interface
+fn configure_theme(ctx: &egui::Context) {
+    let mut visuals = egui::Visuals::dark();
+
+    // Background colours
+    visuals.panel_fill = egui::Color32::from_rgb(17, 13, 29);
+    visuals.window_fill = egui::Color32::from_rgb(27, 20, 43);
+    visuals.extreme_bg_color = egui::Color32::from_rgb(12, 9, 21);
+    visuals.faint_bg_color = egui::Color32::from_rgb(37, 27, 57);
+
+    // Default text colour
+    visuals.override_text_color = Some(egui::Color32::from_rgb(229, 221, 245));
+
+    // Normal buttons
+    visuals.widgets.inactive.bg_fill = egui::Color32::from_rgb(39, 29, 59);
+
+    // Hovered buttons
+    visuals.widgets.hovered.bg_fill = egui::Color32::from_rgb(62, 43, 91);
+
+    // Pressed buttons
+    visuals.widgets.active.bg_fill = egui::Color32::from_rgb(83, 53, 119);
+
+    // Selected elements
+    visuals.selection.bg_fill = egui::Color32::from_rgb(103, 65, 157);
+
+    // Button borders
+    visuals.widgets.inactive.bg_stroke =
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(65, 48, 91));
+
+    visuals.widgets.hovered.bg_stroke =
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(139, 97, 191));
+
+    visuals.widgets.active.bg_stroke =
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(176, 117, 221));
+
+    // Button corners
+    visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(5);
+    visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(5);
+    visuals.widgets.active.corner_radius = egui::CornerRadius::same(5);
+
+    ctx.set_visuals(visuals);
+}
+
+// Consistent button component
+fn tool_button(ui: &mut egui::Ui, label: &str, selected: bool) -> egui::Response {
+    let button = egui::Button::new(label)
+        .selected(selected)
+        .corner_radius(egui::CornerRadius::same(5));
+
+    ui.add_sized([ui.available_width(), 36.0], button)
 }
 
 // Defines how it updates and displays the interface, connects to the eframe GUI and draws the application window
 impl eframe::App for Cracktros {
+    // Draws the interface and applies theme
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        // Draws the interface
+
+        // Applies the theme once
+        if !self.theme_configured {
+            configure_theme(ui.ctx());
+            self.theme_configured = true;
+        }   
 
         // Top header
         egui::Panel::top("header").show(ui, |ui| {
             ui.horizontal(|ui| {
                 // Home button
-                if ui.button("CRACKTROS").clicked() {
+                let home_button = egui::Button::new("but ton")
+                    .min_size(egui::vec2(65.0, 34.0))
+                    .corner_radius(egui::CornerRadius::same(4));
+
+                if ui.add(home_button).clicked() {
                     self.selected_source = None;
                     self.selected_output = None;
                 }
@@ -118,8 +178,12 @@ impl eframe::App for Cracktros {
         egui::Panel::left("sidebar")
             .default_size(180.0)
             .show(ui, |ui| {
+                ui.add_space(8.0);
+
                 ui.heading("ツール"); // Tools section title (translates to "Tools")
+                ui.add_space(8.0);
                 ui.separator();
+                ui.add_space(6.0);
 
                 // Creates buttons for each tool category
                 for tool in [
@@ -130,21 +194,12 @@ impl eframe::App for Cracktros {
                     SourceFormat::Compressor,
                 ] {
                     // Check whether this category is selected
-                    let is_selected = self.selected_source == Some(tool);
+                    let selected = self.selected_source == Some(tool);
 
-                    // Create a button that will highlight when selected
-                    let response = ui.add_sized(
-                        [ui.available_width(), 36.0],
-                        egui::Button::new(tool.label()).selected(is_selected),
-                    );
-
-                    // Updates category when clicked
-                    if response.clicked() {
-                        // Updates the selected category when clicked
+                    if tool_button(ui, tool.label(), selected).clicked() {
                         self.selected_source = Some(tool);
                         self.selected_output = tool.default_output();
                     }
-                    ui.add_space(4.0);
                 }
             });
 
