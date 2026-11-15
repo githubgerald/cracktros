@@ -1,11 +1,20 @@
 mod app;
+mod config;
 mod layout;
 mod theme;
-mod config;
+
+use eframe::egui;
 fn main() -> eframe::Result {
-    let options = eframe::NativeOptions::default(); // Uses default windows setting from eframe
+    // Uses config.rs properties for the window
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([config::WINDOW_WIDTH, config::WINDOW_HEIGHT])
+            .with_min_inner_size([config::WINDOW_WIDTH, config::WINDOW_HEIGHT])
+            .with_max_inner_size([config::WINDOW_WIDTH, config::WINDOW_HEIGHT])
+            .with_resizable(false),
+        ..Default::default()
+    };
     eframe::run_native(
-        // Window titles
         config::APP_TITLE,
         // Window Settings
         options,

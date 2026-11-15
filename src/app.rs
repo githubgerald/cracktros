@@ -28,13 +28,13 @@ pub struct Cracktros {
     pub selected_source: Option<SourceFormat>,
     pub selected_output: Option<OutputFormat>,
     theme_configured: bool, // this checks if the theme has already been applied so it doesnt constantly redraw
-}
+}// Checks the value of an input and runs the corresponding option.
 
 // Names and conversions for each category
 impl SourceFormat {
     pub fn label(self) -> &'static str {
         match self {
-            // Checks the value of an input and runs the corresponding option.
+            
             Self::Png => "PNG",
             Self::Jpg => "JPG",
             Self::Ico => "ICO",
