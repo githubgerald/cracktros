@@ -1,0 +1,62 @@
+
+name: Cracktros CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            binary: cracktro.exe
+          - os: ubuntu-latest
+            binary: cracktro
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libclang-dev \
+            libgtk-3-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libssl-dev
+
+      - name: Build application
+        run: cargo build --release
+
+      - name: Run tests
+        run: cargo test --all-targets
+
+      - name: Verify executable
+        shell: bash
+        run: |
+          test -f "target/release/${{ matrix.binary }}"
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: cracktros-${{ matrix.os }}
+          path: target/release/${{ matrix.binary }}
+          if-no-files-found: error
+          retention-days: 14
