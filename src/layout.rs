@@ -44,26 +44,34 @@ fn tool_button(ui: &mut egui::Ui, label: &str, selected: bool) -> egui::Response
     ui.add_sized([ui.available_width(), theme::TOOL_BUTTON_HEIGHT], button)
 }
 
-// 1px border strips along one edge of a rectangle, drawn inside it
-fn top_edge(rect: egui::Rect) -> egui::Rect {
-    egui::Rect::from_min_size(rect.min, egui::vec2(rect.width(), theme::BORDER_THICKNESS))
+// Draws a double-line frame inside a rectangle: an outer line, a gap, then an inner line
+fn draw_frame(
+    painter: &egui::Painter,
+    rect: egui::Rect,
+    thickness: f32,
+    outer: egui::Color32,
+    inner: egui::Color32,
+) {
+    painter.rect_stroke(
+        rect,
+        0.0,
+        egui::Stroke::new(thickness, outer),
+        egui::StrokeKind::Inside,
+    );
 }
 
-fn bottom_edge(rect: egui::Rect) -> egui::Rect {
-    egui::Rect::from_min_size(
-        egui::pos2(rect.left(), rect.bottom() - theme::BORDER_THICKNESS),
-        egui::vec2(rect.width(), theme::BORDER_THICKNESS),
-    )
+// The frame used around sections, header strips and buttons
+fn draw_section_frame(painter: &egui::Painter, rect: egui::Rect) {
+    draw_frame(
+        painter,
+        rect,
+        theme::BORDER_THICKNESS,
+        theme::COLOUR_BORDER_LIGHT,
+        theme::COLOUR_BORDER,
+    );
 }
 
-fn right_edge(rect: egui::Rect) -> egui::Rect {
-    egui::Rect::from_min_size(
-        egui::pos2(rect.right() - theme::BORDER_THICKNESS, rect.top()),
-        egui::vec2(theme::BORDER_THICKNESS, rect.height()),
-    )
-}
-
-// Title bar button, only visible when hovered or pressed so it blends into the bar
+// Framed title bar button, filled only when hovered or pressed
 fn title_button(
     ui: &egui::Ui,
     rect: egui::Rect,
@@ -77,6 +85,14 @@ fn title_button(
     } else if response.hovered() {
         ui.painter().rect_filled(rect, 0.0, hover_fill);
     }
+
+    // Frame, with the two lines swapped while pressed so the button looks pushed in
+    let (outer, inner) = if response.is_pointer_button_down_on() {
+        (theme::COLOUR_BORDER, theme::COLOUR_BORDER_LIGHT)
+    } else {
+        (theme::COLOUR_BORDER_LIGHT, theme::COLOUR_BORDER)
+    };
+    draw_frame(ui.painter(), rect, theme::BORDER_THICKNESS, outer, inner);
 
     response
 }
@@ -109,32 +125,44 @@ fn banner_text(
 // Draws the application interface
 pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
     let window = ui.max_rect();
+    ui.painter()
+        .rect_filled(window, 0.0, theme::COLOUR_BACKGROUND);
 
-    // Each section is cut from the window's rectangle, so they touch with no gaps
+    // The sections sit inside the window's own frame
+    let inner = window.shrink(theme::WINDOW_BORDER_WIDTH);
+
+    // Neighbouring sections overlap by one line, so they share a single outer line
+    let overlap_y = egui::vec2(0.0, theme::BORDER_THICKNESS);
+    let overlap_x = egui::vec2(theme::BORDER_THICKNESS, 0.0);
+
+    // Each section is cut from the inner rectangle, so they touch with no gaps
     let title_rect = egui::Rect::from_min_size(
-        window.min,
-        egui::vec2(window.width(), theme::TITLE_BAR_HEIGHT),
+        inner.min,
+        egui::vec2(inner.width(), theme::TITLE_BAR_HEIGHT),
     );
     let banner_rect = egui::Rect::from_min_size(
-        title_rect.left_bottom(),
-        egui::vec2(window.width(), theme::BANNER_HEIGHT),
+        title_rect.left_bottom() - overlap_y,
+        egui::vec2(inner.width(), theme::BANNER_HEIGHT),
     );
     let status_rect = egui::Rect::from_min_max(
-        egui::pos2(window.left(), window.bottom() - theme::STATUS_HEIGHT),
-        window.max,
+        egui::pos2(inner.left(), inner.bottom() - theme::STATUS_HEIGHT),
+        inner.max,
     );
 
     // The workspace and content area take whatever space is left
-    let workspace_rect =
-        egui::Rect::from_min_max(banner_rect.left_bottom(), status_rect.right_top());
+    let workspace_rect = egui::Rect::from_min_max(
+        banner_rect.left_bottom() - overlap_y,
+        status_rect.right_top() + overlap_y,
+    );
     let sidebar_rect = egui::Rect::from_min_size(
         workspace_rect.min,
         egui::vec2(
-            window.width() * theme::SIDEBAR_WIDTH,
+            inner.width() * theme::SIDEBAR_WIDTH,
             workspace_rect.height(),
         ),
     );
-    let content_rect = egui::Rect::from_min_max(sidebar_rect.right_top(), workspace_rect.max);
+    let content_rect =
+        egui::Rect::from_min_max(sidebar_rect.right_top() - overlap_x, workspace_rect.max);
 
     draw_title_bar(app, ui, title_rect);
     draw_banner(app, ui, banner_rect);
@@ -142,12 +170,13 @@ pub fn draw_app(app: &mut Cracktros, ui: &mut egui::Ui) {
     draw_content(app, ui, content_rect);
     draw_status_bar(app, ui, status_rect);
 
-    // Border around the whole window
-    ui.painter().rect_stroke(
+    // Thicker frame around the whole window
+    draw_frame(
+        ui.painter(),
         window,
-        0.0,
-        egui::Stroke::new(theme::BORDER_THICKNESS, theme::COLOUR_BORDER),
-        egui::StrokeKind::Inside,
+        theme::WINDOW_BORDER_THICKNESS,
+        theme::COLOUR_BORDER_LIGHT,
+        theme::COLOUR_BORDER,
     );
 }
 
@@ -156,19 +185,33 @@ fn draw_title_bar(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
     let painter = ui.painter_at(rect);
     painter.rect_filled(rect, 0.0, theme::COLOUR_PANEL);
 
+    // Buttons are centred vertically and kept clear of the bar's frame
     let window_button = egui::vec2(theme::WINDOW_BUTTON_WIDTH, theme::WINDOW_BUTTON_HEIGHT);
+    let button_top = rect.center().y - window_button.y / 2.0;
     let close_rect = egui::Rect::from_min_size(
-        egui::pos2(rect.right() - window_button.x, rect.top()),
+        egui::pos2(
+            rect.right() - theme::TITLE_BAR_PADDING - window_button.x,
+            button_top,
+        ),
         window_button,
     );
-    let minimise_rect = close_rect.translate(egui::vec2(-window_button.x, 0.0));
+    let minimise_rect = close_rect.translate(egui::vec2(
+        -(window_button.x + theme::TITLE_BAR_PADDING),
+        0.0,
+    ));
     let home_rect = egui::Rect::from_min_size(
-        rect.min,
-        egui::vec2(theme::HOME_BUTTON_SIZE, theme::TITLE_BAR_HEIGHT),
+        egui::pos2(
+            rect.left() + theme::TITLE_BAR_PADDING,
+            rect.center().y - theme::HOME_BUTTON_SIZE / 2.0,
+        ),
+        egui::vec2(theme::HOME_BUTTON_SIZE, theme::HOME_BUTTON_SIZE),
     );
 
     // The empty space between the buttons drags the window
-    let drag_rect = egui::Rect::from_min_max(home_rect.right_top(), minimise_rect.left_bottom());
+    let drag_rect = egui::Rect::from_min_max(
+        egui::pos2(home_rect.right(), rect.top()),
+        egui::pos2(minimise_rect.left(), rect.bottom()),
+    );
     let drag = ui.interact(
         drag_rect,
         ui.scope_id().with("title_bar_drag"),
@@ -179,18 +222,28 @@ fn draw_title_bar(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
     }
 
     // Home button, de-selects options and goes back to the intro screen
-    let home = title_button(ui, home_rect, "home_button", theme::COLOUR_PANEL_LIGHT);
-    painter.text(
-        home_rect.center(),
-        egui::Align2::CENTER_CENTER,
-        "✦",
-        egui::FontId::proportional(theme::HOME_ICON_SIZE),
-        theme::COLOUR_ACCENT,
+    let home = ui.interact(
+        home_rect,
+        ui.scope_id().with("home_button"),
+        egui::Sense::click(),
+        
     );
+    if home.is_pointer_button_down_on() {
+        painter.rect_filled(home_rect, 0.0, theme::COLOUR_ACCENT);
+    } else if home.hovered() {
+        painter.rect_filled(home_rect, 0.0, theme::COLOUR_PANEL_LIGHT);
+    }
     if home.clicked() {
         app.selected_source = None;
         app.selected_output = None;
     }
+    painter.text(
+    home_rect.center(),
+    egui::Align2::CENTER_CENTER,
+    "T",
+    egui::FontId::proportional(theme::HOME_ICON_SIZE),
+    theme::COLOUR_ACCENT,
+    );
 
     painter.text(
         egui::pos2(home_rect.right() + theme::TITLE_GAP, rect.center().y),
@@ -245,7 +298,7 @@ fn draw_title_bar(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
     }
 
-    painter.rect_filled(bottom_edge(rect), 0.0, theme::COLOUR_BORDER);
+    draw_section_frame(&painter, rect);
 }
 
 // Top banner
@@ -270,7 +323,7 @@ fn draw_banner(app: &Cracktros, ui: &egui::Ui, rect: egui::Rect) {
         theme::COLOUR_BANNER_SUBTITLE,
     );
 
-    painter.rect_filled(bottom_edge(rect), 0.0, theme::COLOUR_BORDER);
+    draw_section_frame(&painter, rect);
 }
 
 // Left sidebar
@@ -286,22 +339,36 @@ fn draw_sidebar(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
     let painter = ui.painter_at(rect);
     painter.rect_filled(rect, 0.0, theme::COLOUR_PANEL);
 
+    // Sidebar title in its own framed strip
+    let header_rect = egui::Rect::from_min_size(
+        rect.min,
+        egui::vec2(rect.width(), theme::SIDEBAR_HEADER_HEIGHT),
+    );
+    painter.text(
+        egui::pos2(
+            header_rect.left() + theme::PANEL_PADDING,
+            header_rect.center().y,
+        ),
+        egui::Align2::LEFT_CENTER,
+        config::SECTION_TOOLS,
+        egui::FontId::proportional(theme::HEADING_SIZE),
+        theme::COLOUR_TEXT,
+    );
+    draw_section_frame(&painter, header_rect);
+
+    // Tool selection starts below the header
+    let tools_rect = egui::Rect::from_min_max(
+        egui::pos2(
+            rect.left() + theme::PANEL_PADDING,
+            header_rect.bottom() + theme::PANEL_PADDING,
+        ),
+        egui::pos2(rect.right() - theme::PANEL_PADDING, rect.bottom()),
+    );
     ui.scope_builder(
         egui::UiBuilder::new()
-            .max_rect(rect.shrink(theme::PANEL_PADDING))
+            .max_rect(tools_rect)
             .layout(egui::Layout::top_down(egui::Align::Min)),
         |ui| {
-            // Sidebar title
-            ui.label(
-                egui::RichText::new(config::SECTION_TOOLS)
-                    .size(theme::HEADING_SIZE)
-                    .strong(),
-            );
-            ui.add_space(theme::HEADING_GAP);
-            ui.separator();
-            ui.add_space(theme::HEADING_GAP);
-
-            // Tool selection
             ui.spacing_mut().item_spacing.y = theme::TOOL_BUTTON_GAP;
 
             for tool in TOOLS {
@@ -315,16 +382,16 @@ fn draw_sidebar(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
         },
     );
 
-    // Artwork fills the space below the last button
+    // Artwork sits at the bottom of the sidebar, cut to a fixed shape
     let art_height = rect.width() / theme::SIDEBAR_ART_ASPECT;
     let art_rect = egui::Rect::from_min_max(
         egui::pos2(rect.left(), rect.bottom() - art_height),
         rect.max,
     );
     draw_art(ui, art_rect, app.art_sidebar.as_ref());
-    painter.rect_filled(top_edge(art_rect), 0.0, theme::COLOUR_BORDER);
+    draw_section_frame(&painter, art_rect);
 
-    painter.rect_filled(right_edge(rect), 0.0, theme::COLOUR_BORDER);
+    draw_section_frame(&painter, rect);
 }
 
 // Main content
@@ -340,27 +407,42 @@ fn draw_content(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
         theme::COLOUR_BACKGROUND.gamma_multiply(theme::CONTENT_ART_DIM),
     );
 
+    // Main content title in its own framed strip
+    let section_title = match app.selected_source {
+        None => config::SECTION_HOME,
+        Some(SourceFormat::Compressor) => config::COMPRESSOR_TITLE,
+        Some(source) => source.label(),
+    };
+    let header_rect = egui::Rect::from_min_size(
+        rect.min,
+        egui::vec2(rect.width(), theme::CONTENT_HEADER_HEIGHT),
+    );
+    painter.rect_filled(header_rect, 0.0, theme::COLOUR_PANEL);
+    painter.text(
+        egui::pos2(
+            header_rect.left() + theme::PANEL_PADDING,
+            header_rect.center().y,
+        ),
+        egui::Align2::LEFT_CENTER,
+        section_title,
+        egui::FontId::proportional(theme::HEADING_SIZE),
+        theme::COLOUR_TEXT,
+    );
+    draw_section_frame(&painter, header_rect);
+
+    // The selected tool's interface starts below the header
+    let body_rect = egui::Rect::from_min_max(
+        egui::pos2(
+            rect.left() + theme::PANEL_PADDING,
+            header_rect.bottom() + theme::PANEL_PADDING,
+        ),
+        rect.max - egui::vec2(theme::PANEL_PADDING, theme::PANEL_PADDING),
+    );
     ui.scope_builder(
         egui::UiBuilder::new()
-            .max_rect(rect.shrink(theme::PANEL_PADDING))
+            .max_rect(body_rect)
             .layout(egui::Layout::top_down(egui::Align::Min)),
         |ui| {
-            // Main content title
-            let section_title = match app.selected_source {
-                None => config::SECTION_HOME,
-                Some(SourceFormat::Compressor) => config::COMPRESSOR_TITLE,
-                Some(source) => source.label(),
-            };
-
-            ui.label(
-                egui::RichText::new(section_title)
-                    .size(theme::HEADING_SIZE)
-                    .strong(),
-            );
-            ui.add_space(theme::HEADING_GAP);
-            ui.separator();
-            ui.add_space(theme::CONTENT_GAP);
-
             // Display selected tool
             match app.selected_source {
                 None => {
@@ -420,13 +502,13 @@ fn draw_content(app: &mut Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
             }
         },
     );
+    draw_section_frame(&painter, rect);
 }
 
 // Bottom status bar
 fn draw_status_bar(app: &Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
     let painter = ui.painter_at(rect);
     painter.rect_filled(rect, 0.0, theme::COLOUR_PANEL);
-    painter.rect_filled(top_edge(rect), 0.0, theme::COLOUR_BORDER);
 
     ui.scope_builder(
         egui::UiBuilder::new()
@@ -444,4 +526,5 @@ fn draw_status_bar(app: &Cracktros, ui: &mut egui::Ui, rect: egui::Rect) {
             });
         },
     );
+    draw_section_frame(&painter, rect);
 }
